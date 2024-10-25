@@ -1,11 +1,10 @@
 import { useFormik } from "formik";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { initialValues } from "../../initialvalues/initialvalues";
-import { validationSchema } from "../../validations/formValidation";
+import { useNavigate, useParams } from "react-router-dom";
 import Slider from "../Slider/Slider";
+import { validationSchema } from "./../../validations/formValidation";
 
-const Form = () => {
+const EditUser = () => {
   let schoolsData = [
     {
       schoolNumber: 1,
@@ -58,37 +57,65 @@ const Form = () => {
       address: "707 Redwood Rd, Redwood City, CA 94061",
     },
   ];
-  const [schools, setSchools] = useState(schoolsData);
-  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const storedUsers = JSON.parse(localStorage.getItem("submitUsers")) || [];
+  const userToEdit = storedUsers.find((user) => user?.id === parseInt(id));
+  const [activeSlideIndex, setActiveSlideIndex] = useState(
+    parseInt(userToEdit?.schoolNumber) - 1
+  );
+
+  // console.log(activeSlideIndex);
 
   const formik = useFormik({
-    initialValues: initialValues,
+    initialValues: {
+      firstName: userToEdit?.firstName || "",
+      lastName: userToEdit?.lastName || "",
+      email: userToEdit?.email || "",
+      country: userToEdit?.country || "",
+      area: userToEdit?.area || "",
+      zipcode: userToEdit?.zipcode || "",
+    },
     validationSchema: validationSchema,
-    onSubmit: async (values) => {
+    enableReinitialize: true,
+    onSubmit: (values) => {
       // console.log(values);
-      const storedUsers = JSON.parse(localStorage.getItem("submitUsers")) || [];
+      const activeSlideInfo = schoolsData[activeSlideIndex];
+      // const updateUser = {
+      //   ...values,
+      //   address: activeSlideInfo.address,
+      //   schoolName: activeSlideInfo.schoolName,
+      //   schoolNumber: activeSlideInfo.schoolNumber,
+      // };
 
-      
-      schools[activeSlideIndex] = {
-        ...schools[activeSlideIndex],
-        id: storedUsers?.length + 1,
-        email: values?.email,
-        firstName: values?.firstName,
-        lastName: values?.lastName,
-        country: values?.country,
-        zipcode: values?.zipcode,
-        area: values?.area,
-      };
+      const updatedUsers = storedUsers.map((user) =>
+        user.id === parseInt(id)
+          ? {
+              ...user,
+              ...values,
+              address: activeSlideInfo.address,
+              schoolName: activeSlideInfo.schoolName,
+              schoolNumber: activeSlideInfo.schoolNumber,
+            }
+          : user
+      );
 
-      console.log(schools[activeSlideIndex]);
+      // console.log(updatedUsers);
 
-      const updateUser = [...storedUsers, schools[activeSlideIndex]];
-      localStorage.setItem("submitUsers", JSON.stringify(updateUser));
-      alert("User Submit Successfully.");
+      // const activeUser = updatedUsers[activeSlideIndex];
+      // console.log("Active User from Slider:", activeUser);
 
-      formik.resetForm();
+      localStorage.setItem("submitUsers", JSON.stringify(updatedUsers));
+
+      alert("User updated successfully");
+      navigate("/users");
     },
   });
+
+  if (!userToEdit) {
+    return <p className="text-red-500 text-center">User not found</p>;
+  }
 
   return (
     <>
@@ -249,35 +276,36 @@ const Form = () => {
                   </label>
                   {/* <Slider handleDetailsUser={handleDetailsUser} users={users} /> */}
                   <Slider
-                    schools={schools}
+                    schools={schoolsData}
+                    index={userToEdit?.schoolNumber - 1}
                     setActiveSlideIndex={setActiveSlideIndex}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* update Button */}
             <div>
               <button
                 type="submit"
                 className="w-full px-4 py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-500 "
               >
-                Submit
+                Update
               </button>
             </div>
           </form>
-          <div className="flex justify-center items-center">
-            <Link
-              to="/users"
-              className="btn bg-blue-500 p-4 rounded-lg text-white"
-            >
-              All Submit User List
-            </Link>
-          </div>
+
+          {/* submit button */}
+          <button
+            className="btn btn-ghost mt-4"
+            onClick={() => navigate(-1)} // Go back to the previous page
+          >
+            Back
+          </button>
         </div>
       </div>
     </>
   );
 };
 
-export default Form;
+export default EditUser;

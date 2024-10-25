@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import AwesomeSlider from "react-awesome-slider";
 import "react-awesome-slider/dist/styles.css";
 // const AutoplaySlider = withAutoplay(AwesomeSlider);
-const Slider = ({ users, handleDetailsUser, setShowUserDetail }) => {
+const Slider = ({ index, schools, setActiveSlideIndex }) => {
   useEffect(() => {
     const leftArrow = document.querySelector(".awssld__prev");
     const rightArrow = document.querySelector(".awssld__next");
@@ -14,6 +14,11 @@ const Slider = ({ users, handleDetailsUser, setShowUserDetail }) => {
     }
   }, []);
 
+  const handleTransitionEnd = (e) => {
+    const currentSlideIndex = e?.currentIndex || index || 0;
+    setActiveSlideIndex(currentSlideIndex);
+  };
+
   return (
     <AwesomeSlider
       bullets={false}
@@ -21,22 +26,22 @@ const Slider = ({ users, handleDetailsUser, setShowUserDetail }) => {
       cancelOnInteraction={false}
       interval={3000}
       className="w-full mt-1"
+      selected={index || 0}
+      onTransitionEnd={handleTransitionEnd}
     >
-      {users?.map((user, index) => (
+      {schools?.map((school, index) => (
         <div
           key={index}
           className="p-4 bg-gray-100 rounded shadow-lg cursor-pointer"
-          onClick={() => {
-            handleDetailsUser(user);
-            setShowUserDetail(true);
-          }}
         >
-          <h2 className="text-xl font-bold">
-            {user.firstName} {user.lastName}
+          <h2 className="text-center text-xl font-bold">
+            {school?.schoolNumber}
           </h2>
-          <p className="text-gray-700">Email: {user.email}</p>
+          <h2 className="text-xl font-bold">
+            School : <span className="text-lg">{school?.schoolName}</span>
+          </h2>
           <p className="text-gray-700">
-            Address: {user.country}, {user.zipcode}
+            Address: <small>{school?.address}</small>{" "}
           </p>
         </div>
       ))}
